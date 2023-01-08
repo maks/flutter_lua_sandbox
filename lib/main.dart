@@ -36,30 +36,29 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     state.openLibs();
   }
 
   void _incrementCounter() {
     setState(() {
-      const luaprg = "x=x+1";
-      print("INc $luaprg");
-      state.loadString(luaprg);
+      const luaChunk = "x=x+1";
+      debugPrint("Lua chunk: $luaChunk");
+      state.loadString(luaChunk);
       state.pushInteger(_counter);
       state.setGlobal('x');
+      // run the lua chunk
       state.call(0, 0);
 
       final t = state.getGlobal("x");
       if (t != LuaType.luaNumber) {
-        print("err $t: ${state.toStr(-1)}");
+        debugPrint("err $t: ${state.toStr(-1)}");
         return;
       }
-      // state.call(0, 0);
       final result = state.toInteger(-1);
       //clear the stack
       state.setTop(0);
-      print("[${state.getTop()}] res:$result");
+      debugPrint("[${state.getTop()}] res:$result");
       _counter = result;
     });
   }
