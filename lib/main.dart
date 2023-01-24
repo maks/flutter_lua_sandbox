@@ -47,18 +47,28 @@ class _MyHomePageState extends State<MyHomePage> {
       state.loadString(luaChunk);
       state.pushInteger(_counter);
       state.setGlobal('x');
-      // run the lua chunk
+
+      // run the Lua chunk
       state.call(0, 0);
 
+      // push value of the global `x` variable from Lua onto the Lua "C" stack
+      // LuaDuardo use the same "virtual stack API" as the official Lua VM uses to interface with C
+      // more details see: http://www.lua.org/manual/5.1/manual.html#3.1
       final t = state.getGlobal("x");
+
+      // check the type of the global value is a number like we expect
       if (t != LuaType.luaNumber) {
         debugPrint("err $t: ${state.toStr(-1)}");
         return;
       }
+
+      // now get the actual value of `x` from Lua stack
       final result = state.toInteger(-1);
-      //clear the stack
+      //clear the Lua stack
       state.setTop(0);
       debugPrint("[${state.getTop()}] res:$result");
+
+      // use the value we got from Lua
       _counter = result;
     });
   }
