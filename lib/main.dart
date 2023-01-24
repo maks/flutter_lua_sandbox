@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lua_dardo/lua.dart';
 
 void main() {
@@ -52,7 +53,7 @@ class _MyHomePageState extends State<MyHomePage> {
       state.call(0, 0);
 
       // push value of the global `x` variable from Lua onto the Lua "C" stack
-      // LuaDuardo use the same "virtual stack API" as the official Lua VM uses to interface with C
+      // LuaDardo use the same "virtual stack API" as the official Lua VM uses to interface with C
       // more details see: http://www.lua.org/manual/5.1/manual.html#3.1
       final t = state.getGlobal("x");
 
@@ -90,6 +91,10 @@ class _MyHomePageState extends State<MyHomePage> {
               '$_counter',
               style: Theme.of(context).textTheme.headline4,
             ),
+            ElevatedButton(
+              onPressed: () => _callLuaFunction('testme'),
+              child: const Text("Call Lua Function"),
+            ),
           ],
         ),
       ),
@@ -99,5 +104,33 @@ class _MyHomePageState extends State<MyHomePage> {
         child: const Icon(Icons.add),
       ),
     );
+  }
+  
+  Future<void> _callLuaFunction(String s) async {
+    final luaChunk = await rootBundle.loadString('assets/testme.lua');
+
+    debugPrint("Lua chunk: $luaChunk");
+    state.loadString(luaChunk);
+    state.call(0, 0); // eval loaded chunk
+
+    final t = state.getGlobal("hello");
+
+    if (t != LuaType.luaFunction) {
+      debugPrint("type err, expected a function but got [$t] ${state.toStr(-1)}");
+      return;
+    }
+
+    // run the Lua chunk
+    final r = state.pCall(0, 1, 1);
+    if (r != ThreadStatus.lua_ok) {
+      debugPrint("Lua error calling function: ${state.toStr(-1)}");
+      return;
+    }
+
+    // now get the actual value from Lua stack
+    final reply = state.toStr(-1);
+    //clear the Lua stack
+    state.setTop(0);
+    debugPrint("[${state.getTop()}] Lua fn result:$reply");
   }
 }
