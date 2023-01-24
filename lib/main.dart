@@ -105,6 +105,13 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
+
+  int _printFromLua(LuaState ls) {
+    final s = ls.checkString(1);
+    ls.pop(1);
+    debugPrint("DART FROM LUA: $s");
+    return 1;
+  }
   
   Future<void> _callLuaFunction(String s) async {
     final luaChunk = await rootBundle.loadString('assets/testme.lua');
@@ -112,6 +119,10 @@ class _MyHomePageState extends State<MyHomePage> {
     debugPrint("Lua chunk: $luaChunk");
     state.loadString(luaChunk);
     state.call(0, 0); // eval loaded chunk
+
+
+    state.pushDartFunction(_printFromLua);
+    state.setGlobal('dartPrint');
 
     final t = state.getGlobal("hello");
 
